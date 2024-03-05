@@ -3,52 +3,73 @@ pipeline {
     
     stages {
         stage('Send Email') {
-        //     steps {
-        //         script {
-        //             def mailBody = """
-        //                 Please review the changes and respond with 'APPROVED' or 'REJECTED'.
-        //             """
-        //             mail to: 'kthangaraju@yahoo.com',
-        //                  subject: 'Code Review Request',
-        //                  body: mailBody
-        //         }
-        //     }
-        // }
-        steps
-        {
-        emailext mimeType: 'text/html',
-        subject: "APPROVAL RQD[JENKINS] ${currentBuild.fullDisplayName}",
-        to: "kthangaraju@yahoo.com",
-        body: '''<a href="${BUILD_URL}input">click to approve</a>'''
+            steps {
+                script {
+                    def mailBody = """
+                        Please review the changes and respond with 'APPROVED' or 'REJECTED'.
+                    """
+                    mail to: 'kthangaraju@yahoo.com',
+                         subject: 'Code Review Request',
+                         body: mailBody
+                }
+            }
         }
-        }  
-    }  
-    // post {
-    //     always {
-    //         script {
-    //             // Fetch emails
-    //             def emails = emailext (
-    //                 subject: "Code Review Request",
-    //                 maxLines: 1
-    //             )
-                
-    //             // Check if any emails were retrieved
-    //             if (emails != null && emails.size() > 0) {
-    //                 // Process the first email
-    //                 def latestEmail = emails[0]
-    //                 def response = latestEmail.getBody().contains("APPROVED") ? "Approved" : "Rejected"
-    //                 echo "Received response: $response"
+        
+        stage('Process Response') {
+            steps {
+                script {
+                    def responseReceived = false
+                    def latestEmail = null
+                    def timeoutReached = false
                     
-    //                 // Take appropriate action based on response
-    //                 if (response == "Approved") {
-    //                     // Proceed with the next steps in your pipeline
-    //                 } else {
-    //                     // Take corrective action or halt the pipeline
-    //                 }
-    //             } else {
-    //                 echo "No response email found with the subject 'Code Review Request'."
-    //             }
-    //         }
-    //     }
-    // }
+                    def startTime = System.currentTimeMillis()
+                    def timeout = 30 * 5000 // 30 seconds
+                    
+                    // Loop until a response is received or timeout is reached
+                    while (!responseReceived && !timeoutReached) {
+                        // Fetch emails
+                        def emails = emailext (
+                            subject: "RE: Code Review Request", // Prefix "RE:" may be added to subject in the response
+                            maxLines: 1
+                        )
+                        
+                        // Check if any emails were retrieved
+                        if (emails != null && emails.size() > 0) {
+                            // Process the first email
+                            latestEmail = emails[0]
+                            
+                            // Extract response from email body
+                            def response = latestEmail.getBody().contains("APPROVED") ? "Approved" : "Rejected"
+                            
+                            // Take appropriate action based on response
+                            if (response == "Approved") {
+                                // Proceed with the next steps in your pipeline
+                                echo "Response received: Approved. Proceeding with next steps."
+                                // Example: sh 'echo "Proceeding with deployment"'
+                            } else {
+                                // Take corrective action or halt the pipeline
+                                echo "Response received: Rejected. Halting the pipeline."
+                                // Example: error "Code review rejected. Halting the pipeline."
+                            }
+                            
+                            responseReceived = true
+                        }
+                        
+                        // Check if timeout has been reached
+                        if (System.currentTimeMillis() - startTime >= timeout) {
+                            timeoutReached = true
+                        }
+                        
+                        // Sleep for a short interval before checking again
+                        sleep 1000 // 1 second
+                    }
+                    
+                    if (timeoutReached) {
+                        echo "No response received within the specified time frame."
+                        // Handle the case where no response is received within the specified timeout
+                    }
+                }
+            }
+        }
+    }
 }
