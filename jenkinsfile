@@ -27,24 +27,19 @@ pipeline {
                     def timeout = 30 * 5000 // 30 seconds
                     
                     while (!responseReceived && !timeoutReached) {
-                        // Fetch the latest email response
-                        def emailResponse = emailextResponse (
-                            subject: "Re: Code Review Request",
-                            maxLines: 1
-                        )
+                        // Fetch the latest build
+                        def build = currentBuild.rawBuild
+                        def console = build.getLog(1000).join('\n')
                         
-                        if (emailResponse != null) {
-                            // Extract response from the email body
-                            def emailBody = emailResponse.getBody()
-                            if (emailBody.contains("APPROVED")) {
-                                echo "Response received: Approved. Proceeding with next steps."
-                                // Proceed with the next steps in your pipeline
-                                responseReceived = true
-                            } else if (emailBody.contains("REJECTED")) {
-                                echo "Response received: Rejected. Halting the pipeline."
-                                // Take corrective action or halt the pipeline
-                                error "Code review rejected. Halting the pipeline."
-                            }
+                        // Check if the console log contains the response
+                        if (console.contains("APPROVED")) {
+                            echo "Response received: Approved. Proceeding with next steps."
+                            // Proceed with the next steps in your pipeline
+                            responseReceived = true
+                        } else if (console.contains("REJECTED")) {
+                            echo "Response received: Rejected. Halting the pipeline."
+                            // Take corrective action or halt the pipeline
+                            error "Code review rejected. Halting the pipeline."
                         }
                         
                         // Check if timeout has been reached
