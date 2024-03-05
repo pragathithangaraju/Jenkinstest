@@ -47,6 +47,7 @@ pipeline {
                     subject: "Code Review Request", 
                     bodyContains: "APPROVED|REJECTED",
                     maxLines: 1
+                    timeout: 120
                 )
                 
                 if (latestEmail != null) {
