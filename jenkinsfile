@@ -7,11 +7,11 @@ pipeline {
                 script {
                     def mailBody = """
                         Please review the changes and click the link below to approve or reject:
-                        ${BUILD_URL}input
+                        <a href="${BUILD_URL}input">Review Changes</a>
                     """
-                    emailext body: mailBody,
+                    emailext htmlBody: mailBody,
                              subject: 'Code Review Request',
-                             to: 'sridev.udayakumar@gmail.com',
+                             to: 'kthangaraju@yahoo.com',
                              replyTo: 'raju.thanga@gmail.com' // Your Gmail address
                 }
             }
@@ -25,7 +25,7 @@ pipeline {
         
         stage('Proceed with Deployment') {
             steps {
-                echo "HI"
+                echo "Hi"
             }
         }
     }
