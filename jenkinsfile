@@ -23,7 +23,7 @@ pipeline {
                 def timeoutReached = false
                 
                 def startTime = System.currentTimeMillis()
-                def timeout = 30 * 1000 // 30 seconds
+                def timeout = 30 * 10000 // 30 seconds
                 
                 try {
                     waitUntil {
