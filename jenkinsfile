@@ -42,8 +42,8 @@ pipeline {
                             maxLines: 1
                         )
                         
-                        // Check for email response
-                        if (emails.size() > 0) {
+                        // Check if emails were retrieved
+                        if (emails != null && emails.size() > 0) {
                             latestEmail = emails[0]
                             responseReceived = true
                             return true // Stop waiting
