@@ -1,14 +1,39 @@
+// pipeline {
+//     agent any
+
+//     stages {
+//         stage('Get Branch Name') {
+//             steps {
+//                 script {
+//                     def branchName = env.GIT_BRANCH
+//                     echo "Current branch name: ${branchName}"
+//                 }
+//             }
+//         }
+//     }
+// }
+
 pipeline {
     agent any
 
     stages {
-        stage('Get Branch Name') {
+        stage('Build') {
             steps {
-                script {
-                    def branchName = env.GIT_BRANCH
-                    echo "Current branch name: ${branchName}"
-                }
+                // Your build steps here
+                sh 'echo "Building..."'
             }
+        }
+    }
+
+    post {
+        always {
+            // Send email notification
+            emailext (
+                subject: "Build ${currentBuild.result}: ${env.JOB_NAME}",
+                body: "Build ${currentBuild.result} for ${env.JOB_NAME}.\n\nCheck console output at: ${env.BUILD_URL}",
+                to: 'kthangaraju@yahoo.com',
+                replyTo: 'your_email@example.com',
+            )
         }
     }
 }
