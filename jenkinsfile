@@ -1,17 +1,14 @@
 pipeline {
     agent any
 
-    environment {
-        DISABLE_AUTH = 'true'
-        DB_ENGINE    = 'sqlite'
-    }
-
     stages {
-        stage('Build') {
+        stage('Get Branch Name') {
             steps {
-                sh 'printenv'
+                script {
+                    def branchName = env.GIT_BRANCH
+                    echo "Current branch name: ${branchName}"
+                }
             }
         }
     }
 }
-
