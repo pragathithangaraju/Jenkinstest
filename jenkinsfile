@@ -1,8 +1,3 @@
-@Grab(group='com.sun.mail', module='javax.mail', version='1.6.2')
-
-import javax.mail.*
-import javax.mail.internet.*
-
 pipeline {
     agent any
     
@@ -15,8 +10,8 @@ pipeline {
                     """
                     emailext body: mailBody,
                              subject: 'Code Review Request',
-                             to: 'recipient@example.com',
-                             replyTo: 'reply@example.com'
+                             to: 'kthangaraju@yahoo.com',
+                             replyTo: 'raju.thanga@gmail.com' // Your Gmail address
                 }
             }
         }
@@ -26,18 +21,15 @@ pipeline {
                 script {
                     def responseReceived = false
                     def timeoutReached = false
-                    def startTime = System.currentTimeMillis()
-                    def timeout = 30 * 1000 // 30 seconds
+                    def response = null
                     
-                    // Loop until a response is received or timeout is reached
+                    def startTime = System.currentTimeMillis()
+                    def timeout = 30 * 5000 // 30 seconds
+                    
                     while (!responseReceived && !timeoutReached) {
-                        // Check for responses in your email system or mailbox
-                        // You would need to replace this with your own logic to fetch and process email responses
-                        // For demonstration purposes, we're simulating checking for responses by sleeping for a short interval
-                        sleep 10000 // 10 seconds (adjust as needed)
+                        // Fetch response from mailbox
+                        response = fetchResponseFromMailbox()
                         
-                        // Assume we received a response (for demonstration purposes)
-                        def response = fetchResponseFromMailbox()
                         if (response != null) {
                             responseReceived = true
                             echo "Response received: $response"
@@ -58,6 +50,9 @@ pipeline {
                         if (System.currentTimeMillis() - startTime >= timeout) {
                             timeoutReached = true
                         }
+                        
+                        // Sleep for a short interval before checking again
+                        sleep 10000 // 10 seconds (adjust as needed)
                     }
                     
                     if (timeoutReached) {
@@ -70,48 +65,50 @@ pipeline {
     }
     
     def fetchResponseFromMailbox() {
-    def host = "imap.gmail.com" // Gmail IMAP host
-    def username = "raju.thanga@gmail.com" // Your Gmail email address
-    def password = "aono hgml varx jpdo" // Your Gmail password
-    
-    Properties props = new Properties()
-    props.setProperty("mail.store.protocol", "imaps")
-    props.setProperty("mail.imap.ssl.enable", "true")
-    props.setProperty("mail.imap.host", host)
-    props.setProperty("mail.imap.port", "993")
+        def host = "imap.gmail.com" // Gmail IMAP host
+        def username = "raju.thanga@gmail.com" // Your Gmail email address
+        def password = "aono hgml varx jpdo" // Your Gmail password
+        
+        Properties props = new Properties()
+        props.setProperty("mail.store.protocol", "imaps")
+        props.setProperty("mail.imap.ssl.enable", "true")
+        props.setProperty("mail.imap.host", host)
+        props.setProperty("mail.imap.port", "993")
 
-    def session = Session.getDefaultInstance(props, null)
-    def store = session.getStore("imaps")
-    store.connect(host, username, password)
+        def session = Session.getDefaultInstance(props, null)
+        def store = session.getStore("imaps")
+        store.connect(host, username, password)
 
-    def inbox = store.getFolder("INBOX")
-    inbox.open(Folder.READ_ONLY)
+        def inbox = store.getFolder("INBOX")
+        inbox.open(Folder.READ_ONLY)
 
-    // Fetch messages received after a certain date (e.g., since the start of the pipeline execution)
-    def sinceDate = new Date() // Change this to the start time of the pipeline execution
-    def searchQuery = new ReceivedDateTerm(ComparisonTerm.GT, sinceDate)
-    def messages = inbox.search(searchQuery)
+        // Fetch messages received after a certain date (e.g., since the start of the pipeline execution)
+        def sinceDate = new Date() // Change this to the start time of the pipeline execution
+        def searchQuery = new ReceivedDateTerm(ComparisonTerm.GT, sinceDate)
+        def messages = inbox.search(searchQuery)
 
-    // Process each message to extract the response
-    for (Message message : messages) {
-        def contentType = message.getContentType()
-        if (contentType.startsWith("text/plain") || contentType.startsWith("multipart")) {
-            def content = message.getContent()
-            if (content instanceof String) {
-                // Extract response from the email body
-                def response = content.trim()
-                if (response == "APPROVED" || response == "REJECTED") {
-                    // Mark the message as read to avoid processing it again
-                    message.setFlag(Flags.Flag.SEEN, true)
-                    return response
+        // Process each message to extract the response
+        for (Message message : messages) {
+            def contentType = message.getContentType()
+            if (contentType.startsWith("text/plain") || contentType.startsWith("multipart")) {
+                def content = message.getContent()
+                if (content instanceof String) {
+                    // Extract response from the email body
+                    def response = content.trim()
+                    if (response == "APPROVED" || response == "REJECTED") {
+                        // Mark the message as read to avoid processing it again
+                        message.setFlag(Flags.Flag.SEEN, true)
+                        inbox.close(false)
+                        store.close()
+                        return response
+                    }
                 }
             }
         }
+
+        inbox.close(false)
+        store.close()
+
+        return null // No response found
     }
-
-    inbox.close(false)
-    store.close()
-
-    return null // No response found
-}
 }
