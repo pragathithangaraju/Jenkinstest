@@ -1,3 +1,8 @@
+@Grab(group='com.sun.mail', module='javax.mail', version='1.6.2')
+
+import javax.mail.*
+import javax.mail.internet.*
+
 def fetchResponseFromMailbox() {
     def host = "imap.gmail.com" // Gmail IMAP host
     def username = "raju.thanga@gmail.com" // Your Gmail email address
@@ -18,7 +23,7 @@ def fetchResponseFromMailbox() {
 
     // Fetch messages received after a certain date (e.g., since the start of the pipeline execution)
     def sinceDate = new Date() // Change this to the start time of the pipeline execution
-    def searchQuery = new ReceivedDateTerm(ComparisonTerm.GT, sinceDate)
+    def searchQuery = new javax.mail.search.ReceivedDateTerm(javax.mail.search.ComparisonTerm.GT, sinceDate)
     def messages = inbox.search(searchQuery)
 
     // Process each message to extract the response
@@ -58,7 +63,7 @@ pipeline {
                     """
                     emailext body: mailBody,
                              subject: 'Code Review Request',
-                             to: 'kthangaraju@yahoo.com',
+                             to: 'kthangaraju@yahoo.coom',
                              replyTo: 'raju.thanga@gmail.com' // Your Gmail address
                 }
             }
@@ -72,7 +77,7 @@ pipeline {
                     def response = null
                     
                     def startTime = System.currentTimeMillis()
-                    def timeout = 30 * 5000 // 30 seconds
+                    def timeout = 30 * 1000 // 30 seconds
                     
                     while (!responseReceived && !timeoutReached) {
                         // Fetch response from mailbox
