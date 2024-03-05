@@ -8,7 +8,7 @@ pipeline {
                     def response = emailext (
                         subject: 'Test Email',
                         body: 'This is a test email.',
-                        to: 'kthangaraju@yahoo.com'
+                        to: 'raju.thanga@gmail.com'
                     )
                     // Check the response of sending the email
                     if (response == 'SENT') {
