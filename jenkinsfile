@@ -25,7 +25,7 @@ pipeline {
         
         stage('Proceed with Deployment') {
             steps {
-                // Proceed with deployment
+                echo "HI"
             }
         }
     }
