@@ -1,16 +1,22 @@
 pipeline {
     agent any
-    
     stages {
-        stage('Ok') {
-            steps {
-                echo "Ok"
+        stage('Testing') {
+            steps{
+               echo "hi"
             }
         }
     }
     post {
-        always {
-            emailext body: 'A Test EMail from jenkins', recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']], subject: 'Test'
-        }
+        failure {
+            emailext attachmentsPattern: 'test.zip', body: '''${SCRIPT, template="groovy-html.template"}''', 
+                    subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed", 
+                    mimeType: 'text/html',to: "kthangaraju@yahoo.com"
+            }
+         success {
+               emailext attachmentsPattern: 'test.zip', body: '''${SCRIPT, template="groovy-html.template"}''', 
+                    subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful", 
+                    mimeType: 'text/html',to: "kthangaraju@yahoo.com"
+          }      
     }
 }
