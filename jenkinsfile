@@ -38,9 +38,8 @@ pipeline {
                         
                         // Check for email response
                         latestEmail = emailext(
-                            subject: "Code Review Request", 
+                            subject: "Re: Code Review Request", 
                             bodyContains: "APPROVED|REJECTED",
-                            to: "raju.thanga@gmail.com",
                             maxLines: 1
                         )
                         
