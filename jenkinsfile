@@ -5,26 +5,21 @@ pipeline {
         stage('Send Email') {
             steps {
                 script {
-                    def retryCount = 1
-                    def maxRetries = 2
-                    def response = retry(maxRetries) {
-                        // Attempt to send email
-                        def emailResponse = emailext (
-                            subject: 'Test Email',
-                            body: 'This is a test email.',
-                            to: 'raju.thanga@gmail.com'
-                        )
-                        // Check if email sending was successful
-                        if (emailResponse != 'SENT') {
-                            // If not successful, throw an exception to trigger retry
-                            throw new Exception("Failed to send email")
-                        }
-                        // Return the response if successful
-                        return emailResponse
+                    def response = emailext (
+                        subject: 'Test Email',
+                        body: 'This is a test email.',
+                        to: 'kthangaraju@yahoo.com'
+                    )
+                    // Check the response of sending the email
+                    if (response == 'SENT') {
+                        // Execute another step if the email is successfully sent
+                        echo 'Email sent successfully'
+                        // Add your next steps here
+                    } else {
+                        // Handle the case when the email sending fails
+                        echo 'Failed to send email'
+                        // Add your error handling steps here
                     }
-                    // If email sending was successful after retrying
-                    echo 'Email sent successfully'
-                    // Add your next steps here
                 }
             }
         }
