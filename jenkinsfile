@@ -36,14 +36,15 @@ pipeline {
                             return true // Stop waiting
                         }
                         
-                        // Check for email response
-                        latestEmail = emailext(
-                            subject: "Re: Code Review Request", 
-                            bodyContains: "APPROVED|REJECTED",
+                        // Fetch emails
+                        def emails = emailext (
+                            subject: "Code Review Request",
                             maxLines: 1
                         )
                         
-                        if (latestEmail != null) {
+                        // Check for email response
+                        if (emails.size() > 0) {
+                            latestEmail = emails[0]
                             responseReceived = true
                             return true // Stop waiting
                         }
@@ -69,6 +70,8 @@ pipeline {
                     } else {
                         // Take corrective action or halt the pipeline
                     }
+                } else {
+                    echo "No response email found with the subject 'Code Review Request'."
                 }
             }
         }
