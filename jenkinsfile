@@ -11,7 +11,7 @@ pipeline {
                     """
                     emailext body: mailBody,
                              subject: 'Code Review Request',
-                             to: 'kthangaraju@yahoo.com',
+                             to: 'sridev.udayakumar@gmail.com',
                              replyTo: 'raju.thanga@gmail.com' // Your Gmail address
                 }
             }
