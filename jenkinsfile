@@ -17,7 +17,7 @@ pipeline {
                              body: mailBody,
                              subject: 'Code Review Request',
                              to: 'kthangaraju@yahoo.com',
-                             replyTo: 'raju.thanga@gmail.com' // Your Gmail address
+                             replyTo: 'jenkins@gmail.com' // Your Gmail address
                 }
             }
         }
