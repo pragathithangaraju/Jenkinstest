@@ -8,9 +8,10 @@ pipeline {
                     def mailBody = """
                         Please review the changes and respond with 'APPROVED' or 'REJECTED'.
                     """
-                    mail to: 'kthangaraju@yahoo.com',
-                         subject: 'Code Review Request',
-                         body: mailBody
+                    emailext body: mailBody,
+                             subject: 'Code Review Request',
+                             to: 'kthangaraju@yahoo.com',
+                             replyTo: 'raju.thanga@gmail.com'
                 }
             }
         }
@@ -19,40 +20,31 @@ pipeline {
             steps {
                 script {
                     def responseReceived = false
-                    def latestEmail = null
                     def timeoutReached = false
+                    def response = null
                     
                     def startTime = System.currentTimeMillis()
                     def timeout = 30 * 5000 // 30 seconds
                     
-                    // Loop until a response is received or timeout is reached
                     while (!responseReceived && !timeoutReached) {
-                        // Fetch emails
-                        def emails = emailext (
-                            subject: "RE: Code Review Request", // Prefix "RE:" may be added to subject in the response
+                        // Fetch the latest email response
+                        def emailResponse = emailextResponse (
+                            subject: "Re: Code Review Request",
                             maxLines: 1
                         )
                         
-                        // Check if any emails were retrieved
-                        if (emails != null && emails.size() > 0) {
-                            // Process the first email
-                            latestEmail = emails[0]
-                            
-                            // Extract response from email body
-                            def response = latestEmail.getBody().contains("APPROVED") ? "Approved" : "Rejected"
-                            
-                            // Take appropriate action based on response
-                            if (response == "Approved") {
-                                // Proceed with the next steps in your pipeline
+                        if (emailResponse != null) {
+                            // Extract response from the email body
+                            def emailBody = emailResponse.getBody()
+                            if (emailBody.contains("APPROVED")) {
                                 echo "Response received: Approved. Proceeding with next steps."
-                                // Example: sh 'echo "Proceeding with deployment"'
-                            } else {
-                                // Take corrective action or halt the pipeline
+                                // Proceed with the next steps in your pipeline
+                                responseReceived = true
+                            } else if (emailBody.contains("REJECTED")) {
                                 echo "Response received: Rejected. Halting the pipeline."
-                                // Example: error "Code review rejected. Halting the pipeline."
+                                // Take corrective action or halt the pipeline
+                                error "Code review rejected. Halting the pipeline."
                             }
-                            
-                            responseReceived = true
                         }
                         
                         // Check if timeout has been reached
