@@ -3,45 +3,52 @@ pipeline {
     
     stages {
         stage('Send Email') {
-            steps {
-                script {
-                    def mailBody = """
-                        Please review the changes and respond with 'APPROVED' or 'REJECTED'.
-                    """
-                    mail to: 'kthangaraju@yahoo.com',
-                         subject: 'Code Review Request',
-                         body: mailBody
-                }
-            }
+        //     steps {
+        //         script {
+        //             def mailBody = """
+        //                 Please review the changes and respond with 'APPROVED' or 'REJECTED'.
+        //             """
+        //             mail to: 'kthangaraju@yahoo.com',
+        //                  subject: 'Code Review Request',
+        //                  body: mailBody
+        //         }
+        //     }
+        // }
+        steps
+        {
+        emailext mimeType: 'text/html,
+        subject: "APPROVAL RQD[JENKINS] ${currentBuild.fullDisplayName}",
+        to: "kthangaraju@yahoo.com",
+        body: '''<a href="${BUILD_URL}input">click to approve</a>'''
         }
-    }
-    
-    post {
-        always {
-            script {
-                // Fetch emails
-                def emails = emailext (
-                    subject: "Code Review Request",
-                    maxLines: 1
-                )
+        }  
+    }  
+    // post {
+    //     always {
+    //         script {
+    //             // Fetch emails
+    //             def emails = emailext (
+    //                 subject: "Code Review Request",
+    //                 maxLines: 1
+    //             )
                 
-                // Check if any emails were retrieved
-                if (emails != null && emails.size() > 0) {
-                    // Process the first email
-                    def latestEmail = emails[0]
-                    def response = latestEmail.getBody().contains("APPROVED") ? "Approved" : "Rejected"
-                    echo "Received response: $response"
+    //             // Check if any emails were retrieved
+    //             if (emails != null && emails.size() > 0) {
+    //                 // Process the first email
+    //                 def latestEmail = emails[0]
+    //                 def response = latestEmail.getBody().contains("APPROVED") ? "Approved" : "Rejected"
+    //                 echo "Received response: $response"
                     
-                    // Take appropriate action based on response
-                    if (response == "Approved") {
-                        // Proceed with the next steps in your pipeline
-                    } else {
-                        // Take corrective action or halt the pipeline
-                    }
-                } else {
-                    echo "No response email found with the subject 'Code Review Request'."
-                }
-            }
-        }
-    }
+    //                 // Take appropriate action based on response
+    //                 if (response == "Approved") {
+    //                     // Proceed with the next steps in your pipeline
+    //                 } else {
+    //                     // Take corrective action or halt the pipeline
+    //                 }
+    //             } else {
+    //                 echo "No response email found with the subject 'Code Review Request'."
+    //             }
+    //         }
+    //     }
+    // }
 }
