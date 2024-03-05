@@ -6,10 +6,15 @@ pipeline {
             steps {
                 script {
                     def mailBody = """
-                        Please review the changes and click the link below to approve or reject:
-                        <a href="${BUILD_URL}input">Review Changes</a>
+                        <html>
+                        <body>
+                            <p>Please review the changes and click the link below to approve or reject:</p>
+                            <p><a href="${BUILD_URL}input">Review Changes</a></p>
+                        </body>
+                        </html>
                     """
-                    emailext htmlBody: mailBody,
+                    emailext mimeType: 'text/html',
+                             body: mailBody,
                              subject: 'Code Review Request',
                              to: 'kthangaraju@yahoo.com',
                              replyTo: 'raju.thanga@gmail.com' // Your Gmail address
