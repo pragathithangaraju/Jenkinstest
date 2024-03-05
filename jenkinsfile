@@ -21,6 +21,7 @@ pipeline {
             script {
                 def responseReceived = false
                 def timeoutReached = false
+                def latestEmail = null
                 
                 def startTime = System.currentTimeMillis()
                 def timeout = 30 * 10000 // 30 seconds
@@ -36,7 +37,7 @@ pipeline {
                         }
                         
                         // Check for email response
-                        def latestEmail = emailext(
+                        latestEmail = emailext(
                             subject: "Code Review Request", 
                             bodyContains: "APPROVED|REJECTED",
                             maxLines: 1
