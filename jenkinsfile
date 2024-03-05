@@ -1,27 +1,16 @@
 pipeline {
     agent any
-
+    
     stages {
-        stage('Send Email') {
+        stage('Ok') {
             steps {
-                script {
-                    def response = emailext (
-                        subject: 'Test Email',
-                        body: 'This is a test email.',
-                        to: 'raju.thanga@gmail.com'
-                    )
-                    // Check the response of sending the email
-                    if (response == 'SENT') {
-                        // Execute another step if the email is successfully sent
-                        echo 'Email sent successfully'
-                        // Add your next steps here
-                    } else {
-                        // Handle the case when the email sending fails
-                        echo 'Failed to send email'
-                        // Add your error handling steps here
-                    }
-                }
+                echo "Ok"
             }
+        }
+    }
+    post {
+        always {
+            emailext body: 'A Test EMail', recipientProviders: [[$class: 'DevelopersRecipientProvider'], [$class: 'RequesterRecipientProvider']], subject: 'Test'
         }
     }
 }
