@@ -1,26 +1,3 @@
-// pipeline {
-//     agent any
-//     stages {
-//         stage('Testing') {
-//             steps{
-//                echo "hi"
-//             }
-//         }
-//     }
-//     post {
-//         failure {
-//             emailext attachmentsPattern: 'test.zip', body: '''${SCRIPT, template="groovy-html.template"}''', 
-//                     subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed", 
-//                     mimeType: 'text/html',to: "kthangaraju@yahoo.com"
-//             }
-//          success {
-//                emailext attachmentsPattern: 'test.zip', body: '''${SCRIPT, template="groovy-html.template"}''', 
-//                     subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful", 
-//                     mimeType: 'text/html',to: "kthangaraju@yahoo.com"
-//           }      
-//     }
-// }
-
 pipeline {
     agent any
     
@@ -33,7 +10,8 @@ pipeline {
                     """
                     emailext body: mailBody, 
                              subject: 'Code Review Request', 
-                             to: 'kthangaraju@yahoo.com'
+                             to: 'kthangaraju@yahoo.com',
+                             replyTo: 'jenkins@example.com'
                 }
             }
         }
@@ -42,26 +20,31 @@ pipeline {
     post {
         always {
             script {
-                // Parse email responses
-                def latestEmail = emailext(
-                    subject: "Code Review Request", 
-                    bodyContains: "APPROVED|REJECTED",
-                    maxLines: 1
-                    timeout: 120
-                )
-                
-                if (latestEmail != null) {
-                    def response = latestEmail.getBody().contains("APPROVED") ? "Approved" : "Rejected"
-                    echo "Received response: $response"
-                    
-                    // Take appropriate action based on response
-                    if (response == "Approved") {
-                        // Proceed with the next steps in your pipeline
-                    } else {
-                        // Take corrective action or halt the pipeline
+                try {
+                    timeout(time: 60, unit: 'SECONDS') {
+                        // Parse email responses within a specific timeout
+                        def response = emailext(
+                            subject: "Code Review Request", 
+                            bodyContains: "APPROVED|REJECTED",
+                            maxLines: 1
+                        )
+                        
+                        if (response != null) {
+                            response = response.getBody().contains("APPROVED") ? "Approved" : "Rejected"
+                            echo "Received response: $response"
+                            
+                            // Take appropriate action based on response
+                            if (response == "Approved") {
+                                // Proceed with the next steps in your pipeline
+                            } else {
+                                // Take corrective action or halt the pipeline
+                            }
+                        } else {
+                            echo "No response received within the specified time frame."
+                        }
                     }
-                } else {
-                    echo "No response received within the specified time frame."
+                } catch (Exception e) {
+                    echo "Timeout occurred while waiting for response."
                 }
             }
         }
