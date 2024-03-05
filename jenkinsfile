@@ -1,3 +1,8 @@
+@Grab(group='com.sun.mail', module='javax.mail', version='1.6.2')
+
+import javax.mail.*
+import javax.mail.internet.*
+
 pipeline {
     agent any
     
@@ -10,45 +15,49 @@ pipeline {
                     """
                     emailext body: mailBody,
                              subject: 'Code Review Request',
-                             to: 'kthangaraju@yahoo.com',
-                             replyTo: 'raju.thanga@gmail.com'
+                             to: 'recipient@example.com',
+                             replyTo: 'reply@example.com'
                 }
             }
         }
         
-        stage('Process Response') {
+        stage('Wait for Response') {
             steps {
                 script {
                     def responseReceived = false
                     def timeoutReached = false
-                    def response = null
-                    
                     def startTime = System.currentTimeMillis()
-                    def timeout = 30 * 5000 // 30 seconds
+                    def timeout = 30 * 1000 // 30 seconds
                     
+                    // Loop until a response is received or timeout is reached
                     while (!responseReceived && !timeoutReached) {
-                        // Fetch the latest build
-                        def build = currentBuild.rawBuild
-                        def console = build.getLog(1000).join('\n')
+                        // Check for responses in your email system or mailbox
+                        // You would need to replace this with your own logic to fetch and process email responses
+                        // For demonstration purposes, we're simulating checking for responses by sleeping for a short interval
+                        sleep 10000 // 10 seconds (adjust as needed)
                         
-                        // Check if the console log contains the response
-                        if (console.contains("APPROVED")) {
-                            echo "Response received: Approved. Proceeding with next steps."
-                            // Proceed with the next steps in your pipeline
+                        // Assume we received a response (for demonstration purposes)
+                        def response = fetchResponseFromMailbox()
+                        if (response != null) {
                             responseReceived = true
-                        } else if (console.contains("REJECTED")) {
-                            echo "Response received: Rejected. Halting the pipeline."
-                            // Take corrective action or halt the pipeline
-                            error "Code review rejected. Halting the pipeline."
+                            echo "Response received: $response"
+                            
+                            // Take appropriate action based on the response
+                            if (response == "APPROVED") {
+                                // Proceed with the next steps in your pipeline
+                                echo "Code review approved. Proceeding with deployment."
+                            } else if (response == "REJECTED") {
+                                // Take corrective action or halt the pipeline
+                                error "Code review rejected. Halting the pipeline."
+                            } else {
+                                echo "Invalid response received: $response"
+                            }
                         }
                         
                         // Check if timeout has been reached
                         if (System.currentTimeMillis() - startTime >= timeout) {
                             timeoutReached = true
                         }
-                        
-                        // Sleep for a short interval before checking again
-                        sleep 1000 // 1 second
                     }
                     
                     if (timeoutReached) {
@@ -59,4 +68,50 @@ pipeline {
             }
         }
     }
+    
+    def fetchResponseFromMailbox() {
+    def host = "imap.gmail.com" // Gmail IMAP host
+    def username = "raju.thanga@gmail.com" // Your Gmail email address
+    def password = "aono hgml varx jpdo" // Your Gmail password
+    
+    Properties props = new Properties()
+    props.setProperty("mail.store.protocol", "imaps")
+    props.setProperty("mail.imap.ssl.enable", "true")
+    props.setProperty("mail.imap.host", host)
+    props.setProperty("mail.imap.port", "993")
+
+    def session = Session.getDefaultInstance(props, null)
+    def store = session.getStore("imaps")
+    store.connect(host, username, password)
+
+    def inbox = store.getFolder("INBOX")
+    inbox.open(Folder.READ_ONLY)
+
+    // Fetch messages received after a certain date (e.g., since the start of the pipeline execution)
+    def sinceDate = new Date() // Change this to the start time of the pipeline execution
+    def searchQuery = new ReceivedDateTerm(ComparisonTerm.GT, sinceDate)
+    def messages = inbox.search(searchQuery)
+
+    // Process each message to extract the response
+    for (Message message : messages) {
+        def contentType = message.getContentType()
+        if (contentType.startsWith("text/plain") || contentType.startsWith("multipart")) {
+            def content = message.getContent()
+            if (content instanceof String) {
+                // Extract response from the email body
+                def response = content.trim()
+                if (response == "APPROVED" || response == "REJECTED") {
+                    // Mark the message as read to avoid processing it again
+                    message.setFlag(Flags.Flag.SEEN, true)
+                    return response
+                }
+            }
+        }
+    }
+
+    inbox.close(false)
+    store.close()
+
+    return null // No response found
+}
 }
