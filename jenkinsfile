@@ -1,22 +1,68 @@
+// pipeline {
+//     agent any
+//     stages {
+//         stage('Testing') {
+//             steps{
+//                echo "hi"
+//             }
+//         }
+//     }
+//     post {
+//         failure {
+//             emailext attachmentsPattern: 'test.zip', body: '''${SCRIPT, template="groovy-html.template"}''', 
+//                     subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed", 
+//                     mimeType: 'text/html',to: "kthangaraju@yahoo.com"
+//             }
+//          success {
+//                emailext attachmentsPattern: 'test.zip', body: '''${SCRIPT, template="groovy-html.template"}''', 
+//                     subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful", 
+//                     mimeType: 'text/html',to: "kthangaraju@yahoo.com"
+//           }      
+//     }
+// }
+
 pipeline {
     agent any
+    
     stages {
-        stage('Testing') {
-            steps{
-               echo "hi"
+        stage('Send Email') {
+            steps {
+                script {
+                    def mailBody = """
+                        Please review the changes and respond with 'APPROVED' or 'REJECTED'.
+                    """
+                    emailext body: mailBody, 
+                             subject: 'Code Review Request', 
+                             to: 'kthangaraju@yahoo.com'
+                }
             }
         }
     }
+    
     post {
-        failure {
-            emailext attachmentsPattern: 'test.zip', body: '''${SCRIPT, template="groovy-html.template"}''', 
-                    subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Failed", 
-                    mimeType: 'text/html',to: "kthangaraju@yahoo.com"
+        always {
+            script {
+                // Parse email responses
+                def latestEmail = emailext(
+                    subject: "Code Review Request", 
+                    bodyContains: "APPROVED|REJECTED",
+                    maxLines: 1
+                )
+                
+                if (latestEmail != null) {
+                    def response = latestEmail.getBody().contains("APPROVED") ? "Approved" : "Rejected"
+                    echo "Received response: $response"
+                    
+                    // Take appropriate action based on response
+                    if (response == "Approved") {
+                        // Proceed with the next steps in your pipeline
+                    } else {
+                        // Take corrective action or halt the pipeline
+                    }
+                } else {
+                    echo "No response received within the specified time frame."
+                }
             }
-         success {
-               emailext attachmentsPattern: 'test.zip', body: '''${SCRIPT, template="groovy-html.template"}''', 
-                    subject: "${env.JOB_NAME} - Build # ${env.BUILD_NUMBER} - Successful", 
-                    mimeType: 'text/html',to: "kthangaraju@yahoo.com"
-          }      
+        }
     }
 }
