@@ -12,7 +12,7 @@ pipeline {
                         def emailResponse = emailext (
                             subject: 'Test Email',
                             body: 'This is a test email.',
-                            to: 'kthangaraju@yahoo.com'
+                            to: 'raju.thanga@gmail.com'
                         )
                         // Check if email sending was successful
                         if (emailResponse != 'SENT') {
