@@ -31,8 +31,8 @@ pipeline {
             emailext (
                 subject: "Build ${currentBuild.result}: ${env.JOB_NAME}",
                 body: "Build ${currentBuild.result} for ${env.JOB_NAME}.\n\nCheck console output at: ${env.BUILD_URL}",
-                to: 'kthangaraju@yahoo.com',
-                replyTo: 'your_email@example.com',
+                to: 'raju.thanga@gmail.com',
+                replyTo: 'kthangaraju@yahoo.com',
             )
         }
     }
