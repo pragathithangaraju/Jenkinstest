@@ -1,39 +1,27 @@
-// pipeline {
-//     agent any
-
-//     stages {
-//         stage('Get Branch Name') {
-//             steps {
-//                 script {
-//                     def branchName = env.GIT_BRANCH
-//                     echo "Current branch name: ${branchName}"
-//                 }
-//             }
-//         }
-//     }
-// }
-
 pipeline {
     agent any
 
     stages {
-        stage('Build') {
+        stage('Send Email') {
             steps {
-                // Your build steps here
-                sh 'echo "Building..."'
+                script {
+                    def response = emailext (
+                        subject: 'Test Email',
+                        body: 'This is a test email.',
+                        to: 'recipient@example.com'
+                    )
+                    // Check the response of sending the email
+                    if (response == 'SENT') {
+                        // Execute another step if the email is successfully sent
+                        echo 'Email sent successfully'
+                        // Add your next steps here
+                    } else {
+                        // Handle the case when the email sending fails
+                        echo 'Failed to send email'
+                        // Add your error handling steps here
+                    }
+                }
             }
-        }
-    }
-
-    post {
-        always {
-            // Send email notification
-            emailext (
-                subject: "Build ${currentBuild.result}: ${env.JOB_NAME}",
-                body: "Build ${currentBuild.result} for ${env.JOB_NAME}.\n\nCheck console output at: ${env.BUILD_URL}",
-                to: 'raju.thanga@gmail.com',
-                replyTo: 'kthangaraju@yahoo.com',
-            )
         }
     }
 }
