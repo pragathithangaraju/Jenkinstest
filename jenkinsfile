@@ -41,76 +41,37 @@ pipeline {
     agent any
     
     environment {
-        MAIL_SERVER = 'pop.example.com'
-        MAIL_USERNAME = credentials('raju.thanga')
-        MAIL_PASSWORD = credentials('aono hgml varx jpdo')
-        SENDER_EMAIL = 'raju.thanga@gmail.com'
+        AWS_REGION = 'us-east-1' // Update with your AWS region
+        SENDER_EMAIL = 'sender@example.com'
+        RECIPIENT_EMAIL = 'recipient@example.com'
+        AWS_CREDENTIALS = credentials('aws-credentials-id') // Update with your AWS credentials ID
     }
     
     stages {
-        stage('Send Approval Request') {
+        stage('Send Email') {
             steps {
                 script {
-                    try {
-                        emailext (
-                            to: 'kthangaraju@yahoo.com',
-                            subject: "Approval Request",
-                            body: "Please approve or reject this request by replying with 'Approved' or 'Rejected'.",
-                            from: env.SENDER_EMAIL
-                        )
-                        println "Approval request email sent successfully."
-                    } catch (Exception e) {
-                        println "Failed to send approval request email: ${e.message}"
-                        currentBuild.result = 'FAILURE'
-                        error(e.message)
+                    def message = 'This is a test email sent from Jenkins using Amazon SES.'
+                    def aws = [:]
+                    aws.withAWS(credentials: env.AWS_CREDENTIALS, region: env.AWS_REGION) {
+                        sh "aws ses send-email --from '${env.SENDER_EMAIL}' --destination '{\"ToAddresses\":[\"${env.RECIPIENT_EMAIL}\"]}' --message '{\"Subject\":{\"Data\":\"Test Email\"},\"Body\":{\"Text\":{\"Data\":\"${message}\"}}}'"
                     }
+                    println "Email sent successfully."
                 }
             }
         }
         
-        stage('Access Mail') {
+        stage('Retrieve Email') {
             steps {
                 script {
-                    try {
-                        def properties = new Properties()
-                        properties.setProperty("mail.pop3.host", env.MAIL_SERVER)
-                        properties.setProperty("mail.pop3.port", "995")
-                        properties.setProperty("mail.pop3.ssl.enable", "true")
-
-                        def session = Session.getDefaultInstance(properties)
-                        def store = session.getStore("pop3s")
-
-                        store.connect(env.MAIL_SERVER, env.MAIL_USERNAME, env.MAIL_PASSWORD)
-
-                        def inbox = store.getFolder("INBOX")
-                        inbox.open(Folder.READ_WRITE)
-
-                        def messages = inbox.getMessages()
-
-                        for (int i = 0; i < messages.length; i++) {
-                            def message = messages[i]
-                            if (message.from[0].toString() == env.SENDER_EMAIL) {
-                                def response = message.content.toString().trim()
-                                if (response.equalsIgnoreCase("Approved")) {
-                                    println "Request approved."
-                                } else if (response.equalsIgnoreCase("Rejected")) {
-                                    println "Request rejected."
-                                } else {
-                                    println "Invalid response: $response"
-                                }
-                                // Optionally, you can mark the message as read or move it to another folder here
-                                // message.setFlag(Flags.Flag.SEEN, true)
-                                // inbox.copyMessages(new Message[] {message}, store.getFolder("Processed"))
-                                // message.setFlag(Flags.Flag.DELETED, true)
-                            }
-                        }
-
-                        inbox.close(true)
-                        store.close()
-                    } catch (Exception e) {
-                        println "Failed to access mail: ${e.message}"
-                        currentBuild.result = 'FAILURE'
-                        error(e.message)
+                    def aws = [:]
+                    aws.withAWS(credentials: env.AWS_CREDENTIALS, region: env.AWS_REGION) {
+                        def response = sh(returnStdout: true, script: "aws ses list-receipt-rule-sets")
+                        println "List of receipt rule sets: ${response}"
+                        // Parse the response to retrieve receipt rule sets
+                        // Implement further logic to retrieve emails based on the receipt rule set
+                        // For example, you might filter emails based on receipt rule set names or status
+                        // You can use `aws ses describe-receipt-rule-set` to get detailed information about a specific receipt rule set
                     }
                 }
             }
