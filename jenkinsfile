@@ -1,30 +1,27 @@
 pipeline {
-    agent any // This specifies that the pipeline can run on any available agent
-
+    agent any
+    
     stages {
-        stage('First Pipeline') {
+        stage('Fetch Branch and Complete Process') {
             steps {
                 echo 'Running first pipeline'
-                // Add your steps for the first pipeline here
             }
         }
     }
 }
 
 pipeline {
-    agent any // This specifies that the pipeline can run on any available agent
-
+    agent any
+    
     triggers {
-        cron('H H * * 2') // Scheduled to run every Tuesday
+        cron('H H * * 2') // This triggers the pipeline every Tuesday
     }
-
+    
     stages {
-        stage('Second Pipeline') {
+        stage('Send Email and Complete Process') {
             steps {
-                echo 'Running second pipeline'
-                // Add your steps for the second pipeline here
+               echo 'Running second pipeline'
             }
         }
     }
 }
-
