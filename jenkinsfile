@@ -1,80 +1,30 @@
-// pipeline {
-//     agent any
-    
-//     stages {
-//         stage('Send Email') {
-//             steps {
-//                 script {
-//                     def mailBody = """
-//                         <html>
-//                         <body>
-//                             <p>Please review the changes and click the link below to approve or reject:</p>
-//                             <p><a href="${BUILD_URL}input">Review Changes</a></p>
-//                         </body>
-//                         </html>
-//                     """
-//                     emailext mimeType: 'text/html',
-//                              body: mailBody,
-//                              subject: 'Code Review Request',
-//                              to: 'kthangaraju@yahoo.com',
-//                              replyTo: 'jenkins@gmail.com' // Your Gmail address
-//                 }
-//             }
-//         }
-        
-//         stage('Wait for Approval') {
-//             steps {
-//                 input message: 'Please review the changes and approve or reject:', submitter: 'admin'
-//             }
-//         }
-        
-//         stage('Proceed with Deployment') {
-//             steps {
-//                 echo "Hi"
-//             }
-//         }
-//     }
-// }
-
-
 pipeline {
-    agent any
-    
-    environment {
-        AWS_REGION = 'us-east-1' // Update with your AWS region
-        SENDER_EMAIL = 'sender@example.com'
-        RECIPIENT_EMAIL = 'recipient@example.com'
-        AWS_CREDENTIALS = credentials('aws-credentials-id') // Update with your AWS credentials ID
-    }
-    
+    agent any // This specifies that the pipeline can run on any available agent
+
     stages {
-        stage('Send Email') {
+        stage('First Pipeline') {
             steps {
-                script {
-                    def message = 'This is a test email sent from Jenkins using Amazon SES.'
-                    def aws = [:]
-                    aws.withAWS(credentials: env.AWS_CREDENTIALS, region: env.AWS_REGION) {
-                        sh "aws ses send-email --from '${env.SENDER_EMAIL}' --destination '{\"ToAddresses\":[\"${env.RECIPIENT_EMAIL}\"]}' --message '{\"Subject\":{\"Data\":\"Test Email\"},\"Body\":{\"Text\":{\"Data\":\"${message}\"}}}'"
-                    }
-                    println "Email sent successfully."
-                }
-            }
-        }
-        
-        stage('Retrieve Email') {
-            steps {
-                script {
-                    def aws = [:]
-                    aws.withAWS(credentials: env.AWS_CREDENTIALS, region: env.AWS_REGION) {
-                        def response = sh(returnStdout: true, script: "aws ses list-receipt-rule-sets")
-                        println "List of receipt rule sets: ${response}"
-                        // Parse the response to retrieve receipt rule sets
-                        // Implement further logic to retrieve emails based on the receipt rule set
-                        // For example, you might filter emails based on receipt rule set names or status
-                        // You can use `aws ses describe-receipt-rule-set` to get detailed information about a specific receipt rule set
-                    }
-                }
+                echo 'Running first pipeline'
+                // Add your steps for the first pipeline here
             }
         }
     }
 }
+
+pipeline {
+    agent any // This specifies that the pipeline can run on any available agent
+
+    triggers {
+        cron('H H * * 2') // Scheduled to run every Tuesday
+    }
+
+    stages {
+        stage('Second Pipeline') {
+            steps {
+                echo 'Running second pipeline'
+                // Add your steps for the second pipeline here
+            }
+        }
+    }
+}
+
